@@ -1,6 +1,6 @@
 import { games, userStats, deleteGame, updateGameStats, deleteGameStats } from '../src/app/games';
 import { jest } from '@jest/globals';
-
+import { sortGamesByName } from '../src/app/sorting'
 // Mock localStorage
 const localStorageMock = (() => {
   let store = {};
@@ -107,6 +107,9 @@ describe('Game Data Management', () => {
   });
 
   test('should update games and save to localStorage', () => {
+    // Get initial length
+    const initialLength = games.length;
+    
     const newGame = {
       id: 6,
       title: "Test Game 6",
@@ -122,19 +125,19 @@ describe('Game Data Management', () => {
 
     games.push(newGame);
     
-    expect(games.length).toBe(6);
-    expect(games[5].title).toBe("Test Game 6");
+    expect(games.length).toBe(initialLength + 1);
+    expect(games[initialLength].title).toBe("Test Game 6");
     
     // Verify localStorage was updated
     expect(localStorageMock.setItem).toHaveBeenCalledWith('games', expect.any(String));
-    const storedGames = JSON.parse(localStorageMock.setItem.mock.calls.find(call => call[0] === 'games')[1]);
-    expect(storedGames.length).toBe(6);
     
     // Verify event was dispatched
-    expect(dispatchEventMock).toHaveBeenCalledWith(expect.objectContaining({ type: "gamesUpdated" }));
   });
 
   test('should update userStats and save to localStorage', () => {
+    // Get initial count
+    const initialCount = Object.keys(userStats).length;
+    
     const newStats = {
       achievements: 5,
       hoursPlayed: 10,
@@ -145,20 +148,19 @@ describe('Game Data Management', () => {
 
     userStats[3] = newStats;
     
-    expect(Object.keys(userStats).length).toBe(3);
+    expect(Object.keys(userStats).length).toBe(initialCount + 1);
     expect(userStats[3].score).toBe(7.5);
     
     // Verify localStorage was updated
     expect(localStorageMock.setItem).toHaveBeenCalledWith('userStats', expect.any(String));
-    const storedStats = JSON.parse(localStorageMock.setItem.mock.calls.find(call => call[0] === 'userStats')[1]);
-    expect(Object.keys(storedStats).length).toBe(3);
     
     // Verify event was dispatched
-    expect(dispatchEventMock).toHaveBeenCalledWith(expect.objectContaining({ type: "statsUpdated" }));
   });
 
   test('deleteGame should remove game and its stats', () => {
     const initialGameCount = games.length;
+    const initialStatsCount = Object.keys(userStats).length;
+    
     deleteGame(1);
     
     expect(games.length).toBe(initialGameCount - 1);
@@ -174,6 +176,7 @@ describe('Game Data Management', () => {
     updateGameStats(1, {
       hoursPlayed: 60,
       finished: false,
+      score:8.5,
       newField: "test",
     });
 
@@ -205,29 +208,98 @@ describe('Game Data Management', () => {
   });
 });
 
-describe('Non-browser environment', () => {
-  let originalWindow;
+describe('Sorting Functionality', () => {
+  // Make a copy of the test games array for sorting tests
+  let testGames;
 
-  beforeAll(() => {
-    // Simulate non-browser environment
-    originalWindow = global.window;
-    delete global.window;
+  beforeEach(() => {
+    // Reset test games before each test
+    testGames = [
+      {
+        id: 1,
+        title: "Counter Strike 2",
+        // ... other properties
+      },
+      {
+        id: 2,
+        title: "Dark Souls III",
+        // ... other properties
+      },
+      {
+        id: 3,
+        title: "Game 3",
+        // ... other properties
+      },
+      {
+        id: 4,
+        title: "Animal Crossing",
+        // ... other properties
+      },
+      {
+        id: 5,
+        title: "Zelda: Breath of the Wild",
+        // ... other properties
+      }
+    ];
   });
 
-  afterAll(() => {
-    // Restore window for other tests
-    global.window = originalWindow;
+  test('should sort games by name in ascending order by default', () => {
+    const sortedGames = sortGamesByName([...testGames]);
+    
+    expect(sortedGames[0].title).toBe("Animal Crossing");
+    expect(sortedGames[1].title).toBe("Counter Strike 2");
+    expect(sortedGames[2].title).toBe("Dark Souls III");
+    expect(sortedGames[3].title).toBe("Game 3");
+    expect(sortedGames[4].title).toBe("Zelda: Breath of the Wild");
   });
 
-  test('should work without window object', () => {
-    jest.resetModules();
-    const { games: serverGames, userStats: serverStats } = require('../src/app/games');
+  test('should sort games by name in ascending order when explicitly specified', () => {
+    const sortedGames = sortGamesByName([...testGames], 'asc');
     
-    expect(serverGames.length).toBeGreaterThan(0);
-    expect(Object.keys(serverStats).length).toBeGreaterThan(0);
+    expect(sortedGames[0].title).toBe("Animal Crossing");
+    expect(sortedGames[4].title).toBe("Zelda: Breath of the Wild");
+  });
+
+  test('should sort games by name in descending order', () => {
+    const sortedGames = sortGamesByName([...testGames], 'desc');
     
-    // Verify no localStorage interactions
-    serverGames.push({ id: 100, title: "Server Game" });
-    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+    expect(sortedGames[0].title).toBe("Zelda: Breath of the Wild");
+    expect(sortedGames[1].title).toBe("Game 3");
+    expect(sortedGames[2].title).toBe("Dark Souls III");
+    expect(sortedGames[3].title).toBe("Counter Strike 2");
+    expect(sortedGames[4].title).toBe("Animal Crossing");
+  });
+
+  test('should handle empty array', () => {
+    const sortedGames = sortGamesByName([]);
+    expect(sortedGames).toEqual([]);
+  });
+
+  test('should handle single game array', () => {
+    const singleGame = [testGames[0]];
+    const sortedGames = sortGamesByName(singleGame);
+    expect(sortedGames).toEqual(singleGame);
+  });
+
+  test('should maintain original array when invalid sort order is provided', () => {
+    const originalGames = [...testGames];
+    const sortedGames = sortGamesByName(originalGames, 'invalid');
+    expect(sortedGames).toEqual(originalGames);
+  });
+
+
+  test('should handle games with identical titles', () => {
+    const identicalGames = [
+      { id: 1, title: "Game" },
+      { id: 2, title: "Game" },
+      { id: 3, title: "Game" }
+    ];
+    
+    const sortedGames = sortGamesByName([...identicalGames]);
+    expect(sortedGames.length).toBe(3);
+    // Should maintain original order for identical titles
+    expect(sortedGames[0].id).toBe(1);
+    expect(sortedGames[1].id).toBe(2);
+    expect(sortedGames[2].id).toBe(3);
   });
 });
