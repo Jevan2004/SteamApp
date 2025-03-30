@@ -246,3 +246,77 @@
   }
 }
 
+/* Add these to your CSS file */
+/* Price category colors */
+.cheap-price {
+  color: #4CAF50; /* Green */
+}
+
+.average-price {
+  color: #FFC107; /* Amber/Yellow */
+}
+
+.expensive-price {
+  color: #F44336; /* Red */
+}
+
+/* Make sure the colors are visible in both light and dark modes */
+.game-title.cheap-price,
+.game-title-overlay.cheap-price {
+  color: #4CAF50 !important;
+}
+
+.game-title.average-price,
+.game-title-overlay.average-price {
+  color: #FFC107 !important;
+}
+
+.game-title.expensive-price,
+.game-title-overlay.expensive-price {
+  color: #F44336 !important;
+}
+/* Price Legend Styles */
+.price-legend {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  max-width: 400px;
+}
+
+.price-legend h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.color-dot.cheap-price {
+  background-color: #4CAF50;
+}
+
+.color-dot.average-price {
+  background-color: #FFC107;
+}
+
+.color-dot.expensive-price {
+  background-color: #F44336;
+}

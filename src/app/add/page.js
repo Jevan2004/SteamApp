@@ -77,7 +77,7 @@ export default function AddGamePage() {
         releaseDate: "N/A",
         averageReviews: "0",
         tags: ["Unknown"],
-        price: "N/A",
+        price: "10$",
       }
 
       // Add the new game to the games array

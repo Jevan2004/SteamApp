@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo  } from "react"
 import { Plus, Settings, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
 import { games } from "./games.js"
 import { sortGamesByName } from "./sorting.js"
-
+import { categorizeGamesByPrice } from "./utils/gameStats.js"
 export default function GamingPlatform() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortOrder, setSortOrder] = useState("asc")
@@ -18,7 +18,6 @@ export default function GamingPlatform() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
-
   // Listen for changes to games
   useEffect(() => {
     const handleGamesUpdated = () => {
@@ -35,6 +34,8 @@ export default function GamingPlatform() {
     }
   }, [])
 
+
+  
   // Only filter games on the client side after mounting
   const filteredGames = isMounted
     ? sortGamesByName(
@@ -47,6 +48,12 @@ export default function GamingPlatform() {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
   }
 
+  const priceCategories = useMemo(() => {
+    if (!isMounted) return { cheap: [], average: [], expensive: [] };
+    return categorizeGamesByPrice(filteredGames);
+  }, [filteredGames, isMounted]);
+  
+  
   return (
     <div className="gaming-platform">
       <div className="container">
@@ -89,39 +96,60 @@ export default function GamingPlatform() {
 
           <div className="games-grid">
             {!isMounted ? (
-              // Show loading state during server rendering and hydration
               <div className="loading-games">Loading your games...</div>
             ) : filteredGames.length > 0 ? (
-              // Show games after client-side hydration
-              filteredGames.map((game) => (
-                <div key={game.id} className="game-card">
-                  <Link href={`/game-details?id=${game.id}`}>
-                    <div className="game-image-container">
-                      {game.image ? (
-                        <div className="game-image-wrapper">
-                          <img src={game.image || "/placeholder.svg"} alt={game.title} className="game-image" />
-                          <div className="game-overlay">
-                            <div className="game-title-overlay">{game.title}</div>
-                            <div className="game-price-overlay">{game.price}</div>
+              filteredGames.map((game) => {
+                const priceClass = 
+                  priceCategories.cheap.includes(game) ? 'cheap-price' :
+                  priceCategories.average.includes(game) ? 'average-price' :
+                  priceCategories.expensive.includes(game) ? 'expensive-price' : '';
+                
+                return (
+                  <div key={game.id} className="game-card">
+                    <Link href={`/game-details?id=${game.id}`}>
+                      <div className="game-image-container">
+                        {game.image ? (
+                          <div className="game-image-wrapper">
+                            <img src={game.image || "/placeholder.svg"} alt={game.title} className="game-image" />
+                            <div className="game-overlay">
+                              <div className={`game-title-overlay ${priceClass}`}>{game.title}</div>
+                              <div className="game-price-overlay">{game.price}</div>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="game-placeholder">N/A</div>
-                      )}
-                    </div>
-                    <div className="game-info">
-                      <p className="game-title">{game.title}</p>
-                      <p className="game-price">{game.price}</p>
-                    </div>
-                  </Link>
-                </div>
-              ))
+                        ) : (
+                          <div className="game-placeholder">N/A</div>
+                        )}
+                      </div>
+                      <div className="game-info">
+                        <p className={`game-title ${priceClass}`}>{game.title}</p>
+                        <p className="game-price">{game.price}</p>
+                      </div>
+                    </Link>
+                  </div>
+                );
+              })
             ) : (
-              // Show no games message
               <div className="no-games-message">No games found. Add some games to your library!</div>
             )}
           </div>
-
+          
+          <div className="price-legend">
+  <h3>Price Categories:</h3>
+  <div className="legend-items">
+    <div className="legend-item">
+      <span className="color-dot cheap-price"></span>
+      <span>Cheap (Lowest 1/3 of prices)</span>
+    </div>
+    <div className="legend-item">
+      <span className="color-dot average-price"></span>
+      <span>Average (Middle 1/3 of prices)</span>
+    </div>
+    <div className="legend-item">
+      <span className="color-dot expensive-price"></span>
+      <span>Expensive (Highest 1/3 of prices)</span>
+    </div>
+  </div>
+</div>
           <div className="add-button-container">
             <Link href="/add">
               <button className="add-button">
