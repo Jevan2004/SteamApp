@@ -88,13 +88,15 @@ if (isBrowser) {
 
 // Create a proxy for games that saves to localStorage on changes
 const gamesProxy = isBrowser
-  ? new Proxy(gamesData, {
-      set: (target, property, value) => {
-        target[property] = value
-        localStorage.setItem("games", JSON.stringify(target))
-        window.dispatchEvent(new Event("gamesUpdated"))
-        return true
-      },
+? new Proxy(gamesData, {
+  set: (target, property, value) => {
+    target[property] = value;
+    localStorage.setItem("games", JSON.stringify(target));
+    window.dispatchEvent(new CustomEvent("gamesUpdated", {
+      detail: { updatedGames: target }
+    }));
+    return true;
+  },
       deleteProperty: (target, property) => {
         delete target[property]
         localStorage.setItem("games", JSON.stringify(target))

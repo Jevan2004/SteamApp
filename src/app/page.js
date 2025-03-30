@@ -6,6 +6,8 @@ import Link from "next/link"
 import { games } from "./games.js"
 import { sortGamesByName } from "./sorting.js"
 import { categorizeGamesByPrice } from "./utils/gameStats.js"
+import  GameCharts from './components/gameCharts.js'
+
 export default function GamingPlatform() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortOrder, setSortOrder] = useState("asc")
@@ -153,22 +155,24 @@ export default function GamingPlatform() {
             <button disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next</button>
           </div>
           <div className="price-legend">
-  <h3>Price Categories:</h3>
-  <div className="legend-items">
-    <div className="legend-item">
-      <span className="color-dot cheap-price"></span>
-      <span>Cheap (Lowest 1/3 of prices)</span>
-    </div>
-    <div className="legend-item">
-      <span className="color-dot average-price"></span>
-      <span>Average (Middle 1/3 of prices)</span>
-    </div>
-    <div className="legend-item">
-      <span className="color-dot expensive-price"></span>
-      <span>Expensive (Highest 1/3 of prices)</span>
-    </div>
-  </div>
-</div>
+            <h3>Price Categories:</h3>
+            <div className="legend-items">
+              <div className="legend-item">
+                <span className="color-dot cheap-price"></span>
+                <span>Cheap (Lowest 1/3 of prices)</span>
+              </div>
+              <div className="legend-item">
+                <span className="color-dot average-price"></span>
+                <span>Average (Middle 1/3 of prices)</span>
+              </div>
+              <div className="legend-item">
+                <span className="color-dot expensive-price"></span>
+                <span>Expensive (Highest 1/3 of prices)</span>
+              </div>
+           </div>
+          </div>
+          <GameCharts games={filteredGames} priceCategories={priceCategories} />
+
           <div className="add-button-container">
             <Link href="/add">
               <button className="add-button">
