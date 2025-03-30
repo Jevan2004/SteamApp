@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo  } from "react"
 import { Plus, Settings, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
-import { games } from "./games.js"
+import { games, addRandomGame } from "./games.js"
 import { sortGamesByName } from "./sorting.js"
 import { categorizeGamesByPrice } from "./utils/gameStats.js"
 import  GameCharts from './components/gameCharts.js'
@@ -13,7 +13,8 @@ export default function GamingPlatform() {
   const [sortOrder, setSortOrder] = useState("asc")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-
+  const [isAddingGames, setIsAddingGames] = useState(false);
+  const [gamesAdded, setGamesAdded] = useState(0);
   // This state is just to force a re-render when games change
   const [, forceUpdate] = useState({})
   // Add a mounted state to prevent hydration mismatch
@@ -66,6 +67,23 @@ export default function GamingPlatform() {
       setCurrentPage(newPage)
     }
   }
+  useEffect(() => {
+    if (!isAddingGames) return;
+  
+    const interval = setInterval(() => {
+      addRandomGame();
+      setGamesAdded(prev => prev + 1);
+    }, 1000); // Adds a game every second
+  
+    return () => clearInterval(interval);
+  }, [isAddingGames]);
+  
+  // Add this function
+  const toggleAutoAdd = () => {
+    setIsAddingGames(prev => !prev);
+    if (isAddingGames) setGamesAdded(0);
+  };
+  
   return (
     <div className="gaming-platform">
       <div className="container">
@@ -90,6 +108,12 @@ export default function GamingPlatform() {
         <div className="library-section">
           <div className="library-header">
             <h2 className="library-title">Your library</h2>
+            <button 
+  onClick={toggleAutoAdd}
+  className={`auto-add-button ${isAddingGames ? 'active' : ''}`}
+>
+  {isAddingGames ? `Stop Adding (${gamesAdded})` : 'Auto-Add Games'}
+</button>
             <div className="search-container">
               <img src="/images/search.png" className="search-icon" />
               <input

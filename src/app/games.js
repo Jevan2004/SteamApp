@@ -145,3 +145,61 @@ export function deleteGameStats(gameId) {
   delete userStats[gameId]
 }
 
+function generateRandomGame() {
+  const titles = [
+    "Epic Adventure", "Space Explorer", "Dragon Quest", "Cyber Punk", "Fantasy Kingdom",
+    "Zombie Survival", "Racing Legends", "Sports Challenge", "Puzzle Master", "Battle Royale"
+  ];
+  const tags = [
+    ["RPG", "Adventure"], ["FPS", "Action"], ["Strategy", "Simulation"], 
+    ["Sports", "Racing"], ["Puzzle", "Casual"], ["Horror", "Survival"]
+  ];
+  const prices = ["Free", "$9.99", "$19.99", "$29.99", "$49.99", "$59.99"];
+
+  return {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    title: titles[Math.floor(Math.random() * titles.length)],
+    image: "/images/placeholder.svg",
+    description: "Randomly generated game",
+    developer: "Random Studio",
+    releaseDate: new Date().toLocaleDateString(),
+    averageReviews: `${Math.floor(Math.random() * 5)}/5`,
+    tags: tags[Math.floor(Math.random() * tags.length)],
+    price: prices[Math.floor(Math.random() * prices.length)]
+  };
+}
+
+export function addRandomGame() {
+  const newGame = generateRandomGame();
+  games.push(newGame);
+  
+  // Generate random user stats for the new game
+  userStats[newGame.id] = {
+    achievements: Math.floor(Math.random() * 50), // 0-49 achievements
+    hoursPlayed: Math.floor(Math.random() * 200), // 0-199 hours
+    finished: Math.random() > 0.7, // 30% chance of being finished
+    score: (Math.random() * 5).toFixed(1), // Random score 0.0-5.0
+    review: getRandomReview()
+  };
+  
+  // Trigger updates for both games and stats
+  window.dispatchEvent(new Event("gamesUpdated"));
+  window.dispatchEvent(new Event("statsUpdated"));
+}
+
+// Helper function for random reviews
+function getRandomReview() {
+  const reviews = [
+    "Absolutely amazing!",
+    "Really enjoyed my time with this one",
+    "Pretty good overall",
+    "Could use some improvements",
+    "Not my favorite",
+    "Worth playing",
+    "A masterpiece",
+    "Just okay",
+    "Would recommend",
+    "Needs more content"
+  ];
+  return reviews[Math.floor(Math.random() * reviews.length)];
+}

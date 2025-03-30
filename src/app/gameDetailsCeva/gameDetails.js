@@ -35,6 +35,7 @@ export default function GameDetails({ game, userStat = {}, updateUserStat, delet
   const handleDelete = () => {
     if (typeof deleteUserStat === "function") {
       deleteUserStat(game.id)
+      document.body.offsetHeight; // This forces a reflow
     }
   }
 

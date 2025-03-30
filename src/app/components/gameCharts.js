@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
+import { userStats } from '../games.js'; // Import userStats from games.js
 
 export default function GameCharts({ games, priceCategories }) {
   const priceChartRef = useRef(null);
@@ -84,17 +85,33 @@ export default function GameCharts({ games, priceCategories }) {
     return () => chart.destroy();
   }, [games]);
 
-  // Completion Status Chart
+  // Completion Status Chart - Updated to use userStats
   useEffect(() => {
     if (!games.length) return;
     
+    // Count completion status from userStats
+    let completed = 0;
+    let inProgress = 0;
+    let notStarted = 0;
+
+    games.forEach(game => {
+      const stats = userStats[game.id];
+      if (stats?.finished) {
+        completed++;
+      } else if (stats?.hoursPlayed > 0) {
+        inProgress++;
+      } else {
+        notStarted++;
+      }
+    });
+
     const ctx = completionChartRef.current.getContext('2d');
     const chart = new Chart(ctx, {
       type: 'pie',
       data: {
         labels: ['Completed', 'In Progress', 'Not Started'],
         datasets: [{
-          data: [10, 5, games.length - 15], // Example data
+          data: [completed, inProgress, notStarted],
           backgroundColor: [
             '#9C27B0',
             '#3F51B5',
@@ -108,6 +125,17 @@ export default function GameCharts({ games, priceCategories }) {
           title: {
             display: true,
             text: 'Completion Status'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         }
       }
