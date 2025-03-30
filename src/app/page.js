@@ -9,6 +9,9 @@ import { categorizeGamesByPrice } from "./utils/gameStats.js"
 export default function GamingPlatform() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortOrder, setSortOrder] = useState("asc")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
   // This state is just to force a re-render when games change
   const [, forceUpdate] = useState({})
   // Add a mounted state to prevent hydration mismatch
@@ -53,7 +56,14 @@ export default function GamingPlatform() {
     return categorizeGamesByPrice(filteredGames);
   }, [filteredGames, isMounted]);
   
-  
+  const totalPages = Math.ceil(filteredGames.length / itemsPerPage)
+  const paginatedGames = filteredGames.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
+    }
+  }
   return (
     <div className="gaming-platform">
       <div className="container">
@@ -91,6 +101,11 @@ export default function GamingPlatform() {
               <button className="sort-button" onClick={toggleSortOrder}>
                 <ArrowUpDown className="sort-icon" />
               </button>
+              <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}>
+                {[10, 20, 30].map((num) => (
+                  <option key={num} value={num}>{num} per page</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -98,7 +113,7 @@ export default function GamingPlatform() {
             {!isMounted ? (
               <div className="loading-games">Loading your games...</div>
             ) : filteredGames.length > 0 ? (
-              filteredGames.map((game) => {
+              paginatedGames.map((game) => {
                 const priceClass = 
                   priceCategories.cheap.includes(game) ? 'cheap-price' :
                   priceCategories.average.includes(game) ? 'average-price' :
@@ -132,7 +147,11 @@ export default function GamingPlatform() {
               <div className="no-games-message">No games found. Add some games to your library!</div>
             )}
           </div>
-          
+                    <div className="pagination-controls">
+            <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next</button>
+          </div>
           <div className="price-legend">
   <h3>Price Categories:</h3>
   <div className="legend-items">
